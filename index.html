@@ -85,10 +85,10 @@
                 <div class="flex flex-col lg:flex-row gap-8">
                     <div class="w-full lg:w-3/5">
                          <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                            <div class="chart-container">
-                                <canvas id="careerChart"></canvas>
+                                <div class="chart-container">
+                                    <canvas id="careerChart"></canvas>
+                                </div>
                             </div>
-                        </div>
                     </div>
                     <div id="job-details" class="w-full lg:w-2/5 p-6 bg-white rounded-lg shadow-sm border border-slate-200 min-h-[400px]"></div>
                 </div>
@@ -274,7 +274,8 @@
                 }
                 const experienceData = content[lang].professionalExperience;
                 const ctx = document.getElementById('careerChart').getContext('2d');
-                const dateLocale = lang === 'pt' ? dateFns.locale.ptBR : undefined;
+                // Corrigido: acesso ao locale do date-fns via window
+                const dateLocale = lang === 'pt' ? window['date-fns/locale/pt-BR'] : undefined;
 
                 careerChart = new Chart(ctx, {
                     type: 'bar',
