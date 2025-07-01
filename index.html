@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcos Oliveira Junqueira - Arquiteto DevOps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Scripts de Gráfico e Data Corrigidos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Carregando o locale de uma fonte UMD confiável (cdnjs) para garantir compatibilidade -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.29.3/locale/pt-BR/index.min.js"></script>
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The SPA is structured as a personal dashboard with persistent top navigation and a language switcher. This allows users (recruiters) to explore content non-linearly in their preferred language. The key sections are: 1. **Timeline**: An interactive career history chart. 2. **Skills**: A categorized grid. 3. **Education**: A clear summary. This structure prioritizes quick access to critical information, enhanced by bilingual support for international usability. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Professional Experience History -> Goal: Visualize career progression and tenure -> Viz/Method: Horizontal Bar Chart (Gantt-style) -> Interaction: Click on a job bar to display its full details. The chart is re-rendered on language change. -> Justification: This immediately communicates the career story and duration in each role, which is more impactful than a text list. -> Library: Chart.js.
+        - Report Info: Key Skills & UI Text -> Goal: Organize competencies and UI elements for quick scanning in multiple languages -> Viz/Method: A responsive grid and labeled sections. -> Interaction: Language switcher dynamically updates all text content. -> Justification: Allows recruiters to quickly find keywords and assess expertise in their native language. -> Library/Method: Vanilla JS for content management.
+        - Report Info: Navigation -> Goal: Organize SPA content -> Viz/Method: A clean, sticky navigation bar. -> Interaction: Click to show/hide content sections. -> Justification: Provides a standard, intuitive single-page application experience. -> Library/Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #1e40af; /* blue-800 */
+            border-bottom-color: #1e40af; /* blue-800 */
+        }
+        .lang-btn.active {
+            background-color: #1e40af;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="relative text-center md:text-left mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900" id="main-name">Marcos Oliveira Junqueira</h1>
+            <p class="text-xl md:text-2xl text-blue-800 mt-1" id="main-role">Arquiteto DevOps</p>
+            <div class="flex justify-center md:justify-start space-x-4 mt-4 text-sm">
+                <a href="mailto:marcos.junqueira@gmail.com" class="text-slate-600 hover:text-blue-800 transition">marcos.junqueira@gmail.com</a>
+                <span class="text-slate-300">|</span>
+                <a href="https://github.com/marcosjunqueira" target="_blank" class="text-slate-600 hover:text-blue-800 transition">GitHub</a>
+                <span class="text-slate-300">|</span>
+                <a href="https://bitbucket.org/marcosjunqueira" target="_blank" class="text-slate-600 hover:text-blue-800 transition">Bitbucket</a>
+            </div>
+            <div id="lang-switcher" class="absolute top-0 right-0 flex border border-slate-300 rounded-lg">
+                <button data-lang="pt" class="lang-btn px-4 py-2 text-sm font-bold rounded-l-md transition">PT</button>
+                <button data-lang="en" class="lang-btn px-4 py-2 text-sm font-bold rounded-r-md transition">EN</button>
+            </div>
+        </header>
+
+        <nav class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10 mb-8 border-b border-slate-200">
+            <div class="flex justify-center space-x-6 md:space-x-8">
+                <button data-target="timeline" id="nav-timeline" class="nav-link py-4 px-2 text-lg font-medium text-slate-600 border-b-2 border-transparent hover:text-blue-800">Linha do Tempo</button>
+                <button data-target="skills" id="nav-skills" class="nav-link py-4 px-2 text-lg font-medium text-slate-600 border-b-2 border-transparent hover:text-blue-800">Competências</button>
+                <button data-target="education" id="nav-education" class="nav-link py-4 px-2 text-lg font-medium text-slate-600 border-b-2 border-transparent hover:text-blue-800">Formação</button>
+            </div>
+        </nav>
+
+        <main>
+            <section id="timeline" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900" id="timeline-title">Linha do Tempo Interativa da Carreira</h2>
+                    <p class="mt-2 text-slate-600 max-w-3xl mx-auto" id="timeline-desc">Este gráfico visualiza minha jornada profissional. Clique em qualquer barra para ver informações detalhadas sobre minhas responsabilidades e conquistas nesse período.</p>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="w-full lg:w-3/5">
+                         <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <div class="chart-container">
+                                <canvas id="careerChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="job-details" class="w-full lg:w-2/5 p-6 bg-white rounded-lg shadow-sm border border-slate-200 min-h-[400px]"></div>
+                </div>
+            </section>
+
+            <section id="skills" class="content-section hidden">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900" id="skills-title">Competências Técnicas</h2>
+                    <p class="mt-2 text-slate-600 max-w-3xl mx-auto" id="skills-desc">Um resumo das minhas principais competências, agrupadas por área de especialização. Minha experiência abrange infraestrutura em nuvem, automação e desenvolvimento full-stack.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-1">Cloud & IaC</h3>
+                        <ul class="space-y-2 text-slate-700"><li>Oracle Cloud</li><li>AWS</li><li>Terraform</li><li>Ansible</li></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-2">CI/CD</h3>
+                        <ul class="space-y-2 text-slate-700"><li>Jenkins</li><li>SonarQube</li><li>Nexus</li><li>Maven</li><li>Hudson / Apache Continuum</li></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-3">Observabilidade</h3>
+                        <ul class="space-y-2 text-slate-700"><li>Prometheus</li><li>Grafana</li></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-4">Linguagens</h3>
+                        <ul class="space-y-2 text-slate-700"><li>Java (SE/EE)</li><li>AngularJS</li><li>JSF</li></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-5">Frameworks</h3>
+                        <ul class="space-y-2 text-slate-700"><li>Spring (e subprojetos)</li><li>Hibernate</li><li>Twitter Bootstrap</li></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-blue-800 mb-3" id="skills-cat-6">Bancos de Dados & Outros</h3>
+                        <ul class="space-y-2 text-slate-700"><li>PostgreSQL, MySQL</li><li>Oracle, SQL Server</li><li>Elastix, Asterisk</li></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="education" class="content-section hidden">
+                <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-slate-900" id="education-title">Formação & Open Source</h2>
+                     <p class="mt-2 text-slate-600 max-w-3xl mx-auto" id="education-desc">Minha formação acadêmica e contribuições para a comunidade open-source, que foram fundamentais para o meu crescimento.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4" id="education-formal-title">Formação Acadêmica</h3>
+                        <div class="mb-4">
+                            <h4 class="text-lg font-semibold text-blue-800" id="education-postgrad-title">Pós-Graduação, Administração de Sistemas de Informação</h4>
+                            <p class="text-slate-600">Universidade Federal de Lavras (UFLA)</p>
+                            <p class="text-sm text-slate-500" id="education-postgrad-date">Concluído em Junho de 2012</p>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold text-blue-800" id="education-bachelor-title">Bacharelado, Ciência da Computação</h4>
+                            <p class="text-slate-600">Universidade Federal de Lavras (UFLA)</p>
+                            <p class="text-sm text-slate-500" id="education-bachelor-date">Concluído em Junho de 2006</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                         <h3 class="text-2xl font-bold text-slate-900 mb-4" id="education-os-title">Contribuições Open Source</h3>
+                         <ul class="list-disc list-inside space-y-2 text-slate-700" id="education-os-list">
+                         </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentLanguage = 'pt';
+            let careerChart;
+
+            const content = {
+                pt: {
+                    htmlLang: 'pt-BR',
+                    title: 'Marcos Oliveira Junqueira - Arquiteto DevOps',
+                    mainRole: 'Arquiteto DevOps',
+                    navTimeline: 'Linha do Tempo',
+                    navSkills: 'Competências',
+                    navEducation: 'Formação',
+                    timelineTitle: 'Linha do Tempo Interativa da Carreira',
+                    timelineDesc: 'Este gráfico visualiza minha jornada profissional. Clique em qualquer barra para ver informações detalhadas sobre minhas responsabilidades e conquistas nesse período.',
+                    jobDetailsPlaceholder: {
+                        title: 'Detalhes',
+                        desc: 'Clique em uma barra no gráfico para ver os detalhes sobre o cargo e minhas realizações.'
+                    },
+                    skillsTitle: 'Competências Técnicas',
+                    skillsDesc: 'Um resumo das minhas principais competências, agrupadas por área de especialização. Minha experiência abrange infraestrutura em nuvem, automação e desenvolvimento full-stack.',
+                    skillsCat1: 'Cloud & IaC',
+                    skillsCat2: 'CI/CD',
+                    skillsCat3: 'Observabilidade',
+                    skillsCat4: 'Linguagens',
+                    skillsCat5: 'Frameworks',
+                    skillsCat6: 'Bancos de Dados & Outros',
+                    educationTitle: 'Formação & Open Source',
+                    educationDesc: 'Minha formação acadêmica e contribuições para a comunidade open-source, que foram fundamentais para o meu crescimento.',
+                    educationFormalTitle: 'Formação Acadêmica',
+                    educationPostgradTitle: 'Pós-Graduação, Administração de Sistemas de Informação',
+                    educationPostgradDate: 'Concluído em Junho de 2012',
+                    educationBachelorTitle: 'Bacharelado, Ciência da Computação',
+                    educationBachelorDate: 'Concluído em Junho de 2006',
+                    educationOsTitle: 'Contribuições Open Source',
+                    educationOsList: [
+                        'Consultoria, suporte e teste no projeto de tradução da IDE NetBeans (versões 5.5 e 6.0) para o português do Brasil.',
+                        'Responsável pelo plugin de tradução do SonarQube para o português.'
+                    ],
+                    professionalExperience: [
+                        { company: 'Neppo Tecnologia - Grupo Sankhya', role: 'Arquiteto DevOps', start: '2019-12-01', end: new Date().toISOString().split('T')[0], description: ['Gerenciei e evoluí pipelines no Jenkins para build, testes automatizados e implantação de novos clientes.', 'Criei pipelines para provisionamento de ambientes em Oracle Cloud e AWS utilizando Terraform e Ansible.', 'Configurei e mantive o ambiente de monitoramento do produto TM2 Digital com Prometheus e Grafana.', 'Atuei na tratativa de incidentes e na proposição de melhorias de infraestrutura.'] },
+                        { company: 'Cartório de Registro de Imóveis', role: 'Administrador de Sistemas', start: '2015-08-01', end: '2019-11-30', description: ['Administrei e prestei suporte aos sistemas do cartório, com contato direto com fornecedores de software.', 'Desenvolvi soluções específicas, incluindo um ambiente de URA (Unidade de Resposta Audível) com Elastix/Asterisk e um atendente virtual usando a API Asterisk Java-AGI.'] },
+                        { company: 'Valecard / Valetech', role: 'Arquiteto de Sistemas Java', start: '2014-06-01', end: '2015-08-31', description: ['Defini a arquitetura de software para os projetos da empresa.', 'Estruturei o ambiente de DevOps com foco em agilidade de correções e entregas de software.'] },
+                        { company: 'Neppo Tecnologia', role: 'Arquiteto de Sistemas Java', start: '2011-02-01', end: '2014-05-31', description: ['Implementei um processo de Integração Contínua utilizando Maven, Jenkins, Sonar, Subversion, Nexus e Selenium.', 'Participei na definição da arquitetura de grandes projetos como o CRM da Algar Telecom (AngularJS, Spring, OSGI, REST).'] }
+                    ]
+                },
+                en: {
+                    htmlLang: 'en',
+                    title: 'Marcos Oliveira Junqueira - DevOps Architect',
+                    mainRole: 'DevOps Architect',
+                    navTimeline: 'Career Timeline',
+                    navSkills: 'Skills',
+                    navEducation: 'Education',
+                    timelineTitle: 'Interactive Career Timeline',
+                    timelineDesc: 'This chart visualizes my professional journey. Click on any bar representing a role to see detailed information about my responsibilities and accomplishments during that period.',
+                    jobDetailsPlaceholder: {
+                        title: 'Details',
+                        desc: 'Click on a bar in the chart to see details about the role and my accomplishments.'
+                    },
+                    skillsTitle: 'Technical Skills',
+                    skillsDesc: 'A summary of my core competencies, grouped by area of expertise. My experience spans cloud infrastructure, automation, and full-stack development.',
+                    skillsCat1: 'Cloud & IaC',
+                    skillsCat2: 'CI/CD',
+                    skillsCat3: 'Observability',
+                    skillsCat4: 'Languages',
+                    skillsCat5: 'Frameworks',
+                    skillsCat6: 'Databases & Other',
+                    educationTitle: 'Education & Open Source',
+                    educationDesc: 'My academic background and contributions to the open-source community, which have been fundamental to my growth.',
+                    educationFormalTitle: 'Formal Education',
+                    educationPostgradTitle: 'Postgraduate Diploma, Information Systems Administration',
+                    educationPostgradDate: 'Concluded June 2012',
+                    educationBachelorTitle: 'Bachelor\'s Degree, Computer Science',
+                    educationBachelorDate: 'Concluded June 2006',
+                    educationOsTitle: 'Open Source Contributions',
+                    educationOsList: [
+                        'Provided consulting, support, and testing for the NetBeans IDE translation project (versions 5.5 and 6.0) into Brazilian Portuguese.',
+                        'Maintained the SonarQube translation plugin for the Portuguese language.'
+                    ],
+                    professionalExperience: [
+                        { company: 'Neppo Tecnologia - Sankhya Group', role: 'DevOps Architect', start: '2019-12-01', end: new Date().toISOString().split('T')[0], description: ['Managed and evolved Jenkins pipelines for build, automated testing, and deployment for new clients.', 'Created pipelines to provision environments in Oracle Cloud and AWS using Terraform and Ansible.', 'Configured and maintained the monitoring environment for the TM2 Digital product with Prometheus and Grafana.', 'Acted in incident response and proposed infrastructure improvements.'] },
+                        { company: 'Real Estate Registry Office', role: 'Systems Administrator', start: '2015-08-01', end: '2019-11-30', description: ['Administered and provided support for the office\'s systems, liaising directly with software vendors.', 'Developed custom solutions, including an IVR (Interactive Voice Response) environment with Elastix/Asterisk and a virtual assistant using the Asterisk Java-AGI API.'] },
+                        { company: 'Valecard / Valetech', role: 'Java Systems Architect', start: '2014-06-01', end: '2015-08-31', description: ['Defined the software architecture for the company\'s projects.', 'Structured the DevOps environment to improve the agility of bug fixes and software deliveries.'] },
+                        { company: 'Neppo Tecnologia', role: 'Java Systems Architect', start: '2011-02-01', end: '2014-05-31', description: ['Implemented a Continuous Integration process using Maven, Jenkins, Sonar, Subversion, Nexus, and Selenium.', 'Participated in defining the architecture for major projects, such as the Algar Telecom CRM (AngularJS, Spring, OSGI, REST).'] }
+                    ]
+                }
+            };
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const jobDetailsContainer = document.getElementById('job-details');
+            const langButtons = document.querySelectorAll('.lang-btn');
+
+            function updateJobDetails(job, lang) {
+                const placeholder = content[lang].jobDetailsPlaceholder;
+                if (!job) {
+                    jobDetailsContainer.innerHTML = `
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">${placeholder.title}</h3>
+                        <p class="text-slate-600">${placeholder.desc}</p>`;
+                    return;
+                }
+                
+                let descriptionHtml = job.description.map(item => `<li class="text-slate-700">${item}</li>`).join('');
+
+                jobDetailsContainer.innerHTML = `
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1">${job.role}</h3>
+                    <p class="text-lg font-medium text-blue-800 mb-4">${job.company}</p>
+                    <ul class="list-disc list-inside space-y-2">
+                        ${descriptionHtml}
+                    </ul>`;
+            }
+            
+            function renderChart(lang) {
+                if(careerChart) {
+                    careerChart.destroy();
+                }
+                const experienceData = content[lang].professionalExperience;
+                const ctx = document.getElementById('careerChart').getContext('2d');
+                const dateLocale = lang === 'pt' ? dateFns.locale.ptBR : undefined;
+
+                careerChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: experienceData.map(job => job.company).reverse(),
+                        datasets: [{
+                            label: 'Career History',
+                            data: experienceData.map(job => [job.start, job.end]).reverse(),
+                            backgroundColor: 'rgba(30, 64, 175, 0.7)',
+                            borderColor: 'rgba(30, 64, 175, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'year' },
+                                min: '2010-01-01',
+                                max: new Date().getFullYear() + '-12-31',
+                                adapters: { date: { locale: dateLocale } },
+                                grid: { color: 'rgba(203, 213, 225, 0.5)' }
+                            },
+                            y: { grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const job = experienceData.slice().reverse()[context.dataIndex];
+                                        return `${job.role} @ ${job.company}`;
+                                    }
+                                }
+                            }
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const elementIndex = elements[0].index;
+                                const jobData = experienceData.slice().reverse()[elementIndex];
+                                updateJobDetails(jobData, currentLanguage);
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderContent(lang) {
+                currentLanguage = lang;
+                const data = content[lang];
+
+                document.documentElement.lang = data.htmlLang;
+                document.title = data.title;
+                
+                const elementMap = {
+                    'main-role': data.mainRole, 'nav-timeline': data.navTimeline, 'nav-skills': data.navSkills,
+                    'nav-education': data.navEducation, 'timeline-title': data.timelineTitle, 'timeline-desc': data.timelineDesc,
+                    'skills-title': data.skillsTitle, 'skills-desc': data.skillsDesc, 'skills-cat-1': data.skillsCat1,
+                    'skills-cat-2': data.skillsCat2, 'skills-cat-3': data.skillsCat3, 'skills-cat-4': data.skillsCat4,
+                    'skills-cat-5': data.skillsCat5, 'skills-cat-6': data.skillsCat6, 'education-title': data.educationTitle,
+                    'education-desc': data.educationDesc, 'education-formal-title': data.educationFormalTitle,
+                    'education-postgrad-title': data.educationPostgradTitle, 'education-postgrad-date': data.educationPostgradDate,
+                    'education-bachelor-title': data.educationBachelorTitle, 'education-bachelor-date': data.educationBachelorDate,
+                    'education-os-title': data.educationOsTitle
+                };
+
+                for (const id in elementMap) {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = elementMap[id];
+                }
+
+                const osList = document.getElementById('education-os-list');
+                osList.innerHTML = data.educationOsList.map(item => `<li>${item}</li>`).join('');
+
+                langButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+                
+                renderChart(lang);
+                updateJobDetails(null, lang);
+            }
+
+            function setActiveNav(targetId) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.dataset.target === targetId);
+                });
+                contentSections.forEach(section => {
+                    section.classList.toggle('hidden', section.id !== targetId);
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => setActiveNav(link.dataset.target));
+            });
+            
+            langButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    renderContent(button.dataset.lang);
+                });
+            });
+
+            // Initial setup
+            setActiveNav('timeline');
+            renderContent(currentLanguage);
+        });
+    </script>
+</body>
+</html>
